@@ -122,7 +122,30 @@ a {
       .masthead .intro-body .intro-text {
 				margin-bottom:200px;
         font-size: 22px; } }
-
+  @media (max-width: 414px) {
+		.btn-circle {
+		width: 155px;
+		height: 155px;
+		margin-top: 2% !important;
+		margin-bottom: 50px;
+		line-height: -52px;
+		-webkit-transition: background 0.3s ease-in-out;
+		-moz-transition: background 0.3s ease-in-out;
+		transition: background 0.3s ease-in-out;
+		color: grey;
+		border: 2px solid grey;
+		border-radius: 100% !important;
+		background: transparent; 
+		}
+		.masthead .intro-body .brand-heading {
+			font-size: 50px; }
+		.content-section {
+			margin-top:-15x;
+		}
+		.masthead {
+			padding: 115px 0;
+		}		
+	}
 .btn-circle {
   font-size: 26px;
   width: 55px;
