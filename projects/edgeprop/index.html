@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html>
   <head>
@@ -184,3 +185,191 @@
     </script>
   </body>
 </html>
+=======
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>Circles</title>
+    <style>
+			html, body, #map-canvas {
+					height: 100%;
+					margin: 0px;
+					padding: 0px
+			}
+    </style>
+  </head>
+  <body>
+		<div id="info"></div>
+		<div id="map-canvas"></div>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBQ0-_1GR0XiFCPpKtTCB6lwHGEM6icnqM"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script>
+			var map;
+      function init() {
+          var mapDiv = document.getElementById('map-canvas');
+          map = new google.maps.Map(mapDiv, {
+              center: new google.maps.LatLng(-6.912,107.622),
+              zoom: 17,
+              mapTypeId: google.maps.MapTypeId.ROADMAP
+          });
+          var distanceWidget = new DistanceWidget(map);
+          google.maps.event.addListener(distanceWidget, 'distance_changed', function () {
+              displayInfo(distanceWidget);
+          });
+
+          google.maps.event.addListener(distanceWidget, 'position_changed', function () {
+              displayInfo(distanceWidget);
+          });
+					
+					var script = document.createElement('script');
+					script.src = 'dummyplaces.json';
+					document.getElementsByTagName('head')[0].appendChild(script);
+      }
+
+      google.maps.event.addDomListener(window, 'load', init);
+			
+      function DistanceWidget(map) {
+          this.set('map', map);
+          this.set('position', map.getCenter());
+
+          var marker = new google.maps.Marker({
+              draggable: true,
+              icon: {
+                  url: "move-icon.png",
+                  size: new google.maps.Size(64, 64),
+                  anchor: new google.maps.Point(30, 30)
+              },
+              title: 'Move me!'
+          });
+
+          marker.bindTo('map', this);
+          marker.bindTo('position', this);
+
+          var radiusWidget = new RadiusWidget();
+          radiusWidget.bindTo('map', this);
+          radiusWidget.bindTo('center', this, 'position');
+
+          this.bindTo('distance', radiusWidget);
+          this.bindTo('bounds', radiusWidget);
+      }
+      DistanceWidget.prototype = new google.maps.MVCObject();
+
+      function RadiusWidget() {
+          var circle = new google.maps.Circle({
+              strokeWeight: 1
+          });
+
+          this.set('distance',0.35);
+          this.bindTo('bounds', circle);
+
+          circle.bindTo('center', this);
+          circle.bindTo('map', this);
+          circle.bindTo('radius', this);
+
+          this.addSizer_();
+      }
+      RadiusWidget.prototype = new google.maps.MVCObject();
+
+      RadiusWidget.prototype.distance_changed = function () {
+          this.set('radius', this.get('distance') * 1000);
+      };
+			
+      RadiusWidget.prototype.addSizer_ = function () {
+          var sizer = new google.maps.Marker({
+              draggable: true,
+              icon: {
+                  url: "resize-icon.png",
+                  size: new google.maps.Size(45, 45),
+                  anchor: new google.maps.Point(0, 20)
+              },
+              title: 'Drag me!'
+          });
+
+          sizer.bindTo('map', this);
+          sizer.bindTo('position', this, 'sizer_position');
+
+          var me = this;
+          google.maps.event.addListener(sizer, 'drag', function () {
+              me.setDistance();
+          });
+      };
+
+      RadiusWidget.prototype.center_changed = function () {
+          var bounds = this.get('bounds');
+					
+          if (bounds) {
+              var lng = bounds.getNorthEast().lng();
+
+              var position = new google.maps.LatLng(this.get('center').lat(), lng);
+              this.set('sizer_position', position);
+          }
+      };
+
+      RadiusWidget.prototype.distanceBetweenPoints_ = function (p1, p2) {
+          if (!p1 || !p2) {
+              return 0;
+          }
+
+          var R = 6371; // Radius of the Earth in km 
+          var dLat = (p2.lat() - p1.lat()) * Math.PI / 180;
+          var dLon = (p2.lng() - p1.lng()) * Math.PI / 180;
+          var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(p1.lat() * Math.PI / 180) * Math.cos(p2.lat() * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+          var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+          var d = R * c;
+          return d;
+      };
+
+			var markers = [];			
+			window.callback = function(results) {
+				RadiusWidget.prototype.setDistance = function () {
+					for (var i = 0; i < results.places.length; i++) {
+						var latitude = results.places[i].lat;
+						var longitude = results.places[i].lng;
+						var latLng = new google.maps.LatLng(latitude,longitude);
+						
+						var pos = this.get('sizer_position');
+						var center = this.get('center');
+						var distancekm = this.distanceBetweenPoints_(center, pos);
+						var distancetoplace = this.distanceBetweenPoints_(center, latLng);
+						this.set('distance', distancekm);
+						
+							var marker = new google.maps.Marker({
+								position: latLng,
+								map: map
+							});
+							markers.push(marker);
+						function setMapOnAll(map) {
+							for (var i = 0; i < markers.length; i++) {
+								markers[i].setMap(map);
+							}
+						}
+
+						// Removes the markers from the map, but keeps them in the array.
+						function clearMarkers() {
+							setMapOnAll(null);
+						}
+
+						// Shows any markers currently in the array.
+						function showMarkers() {
+							setMapOnAll(map);
+						}
+							//markers.push(place);
+						if(distancetoplace <= distancekm){
+							showMarkers();
+						}else {
+							clearMarkers();
+						}
+					}
+				};
+			}
+
+      function displayInfo(widget) {
+          var info = document.getElementById('info');
+          info.innerHTML = 'Position: ' + widget.get('position').toUrlValue(3) + ', distance: ' + widget.get('distance').toFixed(3)+' km';
+      }
+    </script>
+  </body>
+</html>
+>>>>>>> 66cb13a46f402839163deed58057f6f9a54715ef
