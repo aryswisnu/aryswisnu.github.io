@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Data Layer: Simple</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    <meta name="viewport" content="initial-scale=1.0">
+    <meta charset="utf-8">
+    <style>
+      /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+      #map {
+        height: 100%;
+      }
+      /* Optional: Makes the sample page fill the window. */
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    <script>
+
+      var map;
+      var json = "http://polygons.openstreetmap.fr/get_geojson.py?id=304751&params=0.040000-0.010000-0.010000";
+
+      var innerCoords = [];
+      var innerLatLng = {};
+
+      $.getJSON(json, function(data) {
+        console.log(data);
+        var dummyInnerCoords = data;
+        dummyInnerCoords.coordinates[0].forEach((coor) => {
+          coor.map((latLng) => {
+            innerLatLng = {"lat": latLng[1], "lng": latLng[0]}
+            innerCoords.push(innerLatLng)
+          })
+        })
+        console.log(innerCoords);
+        initMap();
+      })
+
+      function initMap() {
+        map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 5,
+          center: {lat: -0.7893, lng: 113.9213}
+        });
+        map.data.setStyle({
+          fillColor: 'green',
+          strokeWeight: 1
+        });
+        // NOTE: This uses cross-domain XHR, and may not work on older browsers.
+        map.data.loadGeoJson('https://raw.githubusercontent.com/superpikar/indonesia-geojson/master/indonesia-province.json');
+
+        // var dummyInnerCoords = {
+        //   "type": "FeatureCollection",
+        //   "features": [
+        //     {
+        //       "type": "Feature",
+        //       "properties": {
+        //         "letter": "G",
+        //         "color": "blue",
+        //         "rank": "7",
+        //         "ascii": "71"
+        //       },
+        //       "geometry": {
+        //         "type": "Polygon",
+        //         "coordinates": [
+        //           [
+        //             [123.61, -22.14], [122.38, -21.73], [121.06, -21.69], [119.66, -22.22], [119.00, -23.40],
+        //             [118.65, -24.76], [118.43, -26.07], [118.78, -27.56], [119.22, -28.57], [120.23, -29.49],
+        //             [121.77, -29.87], [123.57, -29.64], [124.45, -29.03], [124.71, -27.95], [124.80, -26.70],
+        //             [124.80, -25.60], [123.61, -25.64], [122.56, -25.64], [121.72, -25.72], [121.81, -26.62],
+        //             [121.86, -26.98], [122.60, -26.90], [123.57, -27.05], [123.57, -27.68], [123.35, -28.18],
+        //             [122.51, -28.38], [121.77, -28.26], [121.02, -27.91], [120.49, -27.21], [120.14, -26.50],
+        //             [120.10, -25.64], [120.27, -24.52], [120.67, -23.68], [121.72, -23.32], [122.43, -23.48],
+        //             [123.04, -24.04], [124.54, -24.28], [124.58, -23.20], [123.61, -22.14]
+        //           ]
+        //         ]
+        //       }
+        //     }
+        //   ]
+        // }
+
+        var dummyOuterCoords =  [
+            [0, 90],
+            [180, 90],
+            [180, -90],
+            [0, -90],
+            [-180, -90],
+            [-180, 0],
+            [-180, 90],
+            [0, 90]
+        ]
+        var outerCoords = [];
+        var outerLatLng = {};
+        dummyOuterCoords.map((latLng) => {
+          outerLatLng = {"lat": latLng[1], "lng": latLng[0]}
+          outerCoords.push(outerLatLng)
+        })
+
+        // if(innerCoords.length > 0){
+        //   map.data.add({
+        //     geometry: new google.maps.Data.Polygon([outerCoords,innerCoords])
+        //   })
+        //   map.data.setStyle({
+        //     // fillColor: 'grey',
+        //     strokeWeight: 2
+        //   });
+        // }
+      }
+    </script>
+
+    <script async defer
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC9h9icjUbLnV4txic-Zjli2n9zFFrrZbQ&callback=initMap">
+    </script>
+  </body>
+</html>
