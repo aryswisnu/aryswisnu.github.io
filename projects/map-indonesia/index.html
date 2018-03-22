@@ -10,11 +10,33 @@
       }
       #map_canvas {
       width: 100%;
-      height: 100%
+      height: 100%;
+      margin-top: -5%
       }
       .infowindow * {
       font-size: 90%;
       margin: 0
+      }
+      #button_container{
+        position: relative;
+        top: 10px;
+        left: 43%;
+        z-index: 10;
+        background-color: #fff;
+        border: 2px solid #fff;
+        border-radius: 3px;
+        box-shadow: 0 2px 6px rgba(0,0,0,.3);
+        cursor: pointer;
+        margin-bottom: 22px;
+        text-align: center;
+      }
+      #button_text_container{
+       color: rgb(25,25,25);
+       font-family: Roboto,Arial,sans-serif;
+       font-size: 16px;
+       line-height: 38px;
+       padding-left: 5px;
+       padding-right: 5px;
       }
     </style>
 
@@ -26,11 +48,10 @@
     <table style="width:100%; height:100%;">
       <tr style="width:100%; height:100%;">
         <td style="width:100%; height:100%;">
-          <div id="map_canvas"></div>
+          <button id="button_container"><div id="button_text_container">Menampilkan: <span id="button_text"></span></div></button>
+          <div id="map_canvas">
+          </div>
         </td>
-        <!-- <td>
-          <div id="sidebar" style="width:300px;height:90vh; overflow:scroll"></div>
-        </td> -->
       </tr>
     </table>
     <script>
@@ -52,24 +73,8 @@
       var CountryName = "Indonesia";
       google.load('visualization', '1', {'packages': ['corechart', 'table', 'geomap']});
 
-      // function createSidebar() {
-      //   // set the query using the parameters
-      //   var FT_Query2 = "SELECT 'nm_provinsi', 'nm_kabkota', 'nm_keca', 'geometry' FROM " + FT_TableID;
-      //   var queryText = encodeURIComponent(FT_Query2);
-      //   var query = new google.visualization.Query('http://www.google.com/fusiontables/gvizdata?tq=' + queryText);
-      //
-      //   //set the callback function
-      //   query.send(getData);
-      // }
-
-      // Set a callback to run when the Google Visualization API is loaded.
-      // google.setOnLoadCallback(createSidebar);
-
       var FTresponse = null;
 
-      // myLatLng = new google.maps.LatLng(37.422104808, -122.0838851);
-      // these set the initial center, zoom and maptype for the map
-      // if it is not specified in the query string
       var lat = 0.7893;
       var lng = 113.9213;
       var zoomMinProvinsi = 5;
@@ -80,69 +85,24 @@
       if (!isNaN(lat) && !isNaN(lng)) {
         myLatLng = new google.maps.LatLng(lat, lng);
       }
-      // infoWindow = new google.maps.InfoWindow();
-      //define callback function, this is called when the results are returned
 
-      // function getData(response) {
-      //   if (!response) {
-      //     alert('no response');
-      //     return;
-      //   }
-      //   if (response.isError()) {
-      //     alert('Error in query: ' + response.getMessage() + ' ' + response.getDetailedMessage());
-      //     return;
-      //   }
-      //   FTresponse = response;
-      //   //for more information on the response object, see the documentation
-      //   //http://code.google.com/apis/visualization/documentation/reference.html#QueryResponse
-      //   numRows = response.getDataTable().getNumberOfRows();
-      //   numCols = response.getDataTable().getNumberOfColumns();
-      //
-      //   fusiontabledata = "<table><tr>";
-      //   fusiontabledata += "<th>" + response.getDataTable().getColumnLabel(1) + "</th>";
-      //   //   }
-      //   fusiontabledata += "</tr><tr>";
-      //
-      //   for (i = 0; i < numRows; i++) {
-      //     fusiontabledata += "<td><a href='javascript:myFTclick(" + i + ")'>" + response.getDataTable().getValue(i, 1) + "</a></td>";
-      //     fusiontabledata += "</tr><tr>";
-      //   }
-      //   fusiontabledata += "</table>";
-      //   //display the results on the page
-      //   // document.getElementById('sidebar').innerHTML = fusiontabledata;
-      // }
+      function ZoomControl(map, textZoomControl) {
+        var buttontext = document.getElementById("button_text");
+        buttontext.innerHTML = textZoomControl;
 
-      // function infoWindowContent(name, description) {
-      //   content = '<div class="FT_infowindow"><h3>' + name + '</h3><div>' + description + '</div></div>';
-      //   return content;
-      // }
-
-      // function myFTclick(row) {
-      //   var description = FTresponse.getDataTable().getValue(row, 0);
-      //   var name = FTresponse.getDataTable().getValue(row, 1);
-      //   if (!gpolygons[row]) {
-      //     var kml = FTresponse.getDataTable().getValue(row, 2);
-      //     // create a geoXml3 parser for the click handlers
-      //     var geoXml = new geoXML3.parser({
-      //       map: map,
-      //       zoom: false,
-      //       infoWindow: infoWindow,
-      //       singleInfoWindow: true
-      //     });
-      //
-      //     geoXml.parseKmlString("<Placemark>" + kml + "</Placemark>");
-      //     geoXml.docs[0].gpolygons[0].setMap(null);
-      //     gpolygons[row] = geoXml.docs[0].gpolygons[0].bounds.getCenter();
-      //   }
-      //   var position = gpolygons[row];
-      //   if (!infoWindow) infoWindow = new google.maps.InfoWindow({});
-      //   infoWindow.setOptions({
-      //     content: infoWindowContent(name, description),
-      //     pixelOffset: new google.maps.Size(0, 2),
-      //     position: position
-      //   });
-      //   infoWindow.open(map);
-      // }
+        // var buttoncontainer = document.getElementById("button_container");
+        //   if(textZoomControl == 'Kabupaten'){
+        //     buttoncontainer.addEventListener('click', function() {
+        //       map.setZoom(zoomMinKabupaten);
+        //     })
+        //   }
+        //   }else if (textZoomControl == 'Kecamatan') {
+        //     map.setZoom(zoomMinKecamatan)
+        //   }else{
+        //     map.setZoom(zoomMinProvinsi)
+        //   }
+        // });
+      }
 
       function initialize() {
         myOptions = {
@@ -152,48 +112,6 @@
         };
 
         map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
-        // callLayer(FT_KabupatenTableID)
-        // var geocoder = new google.maps.Geocoder();
-        // if (geocoder && geocodeTheCountry) {
-        //   geocoder.geocode({
-        //     'address': CountryName + " Country"
-        //   }, function(results, status) {
-        //     if (status == google.maps.GeocoderStatus.OK) {
-        //       if (status != google.maps.GeocoderStatus.ZERO_RESULTS) {
-        //         map.setCenter(results[0].geometry.location);
-        //         map.fitBounds(results[0].geometry.viewport);
-        //       } else {
-        //         alert("No results found");
-        //       }
-        //     } else {
-        //       alert("Geocode was not successful for the following reason: " + status);
-        //     }
-        //   });
-        // }
-
-        // google.maps.event.addListener(layer, "click", function(event) {
-        //   infoWindow.close();
-        //   infoWindow.setContent(infoWindowContent(event.row.name_1.value, event.row.name_0.value));
-        //   infoWindow.setPosition(event.latLng);
-        //   infoWindow.open(map);
-        // });
-
-        // var FT_Query = "SELECT 'geometry' FROM " + tableID;
-        // var FT_Options = {
-        //   suppressInfoWindows: true,
-        //   query: {
-        //     from: tableID,
-        //     select: 'geometry'
-        //   },
-        //   styles: [{
-        //     polygonOptions: {
-        //       fillColor: "#FFFFFF",
-        //       fillOpacity: 0.35
-        //     }
-        //   }]
-        // };
-        // layer = new google.maps.FusionTablesLayer(FT_Options);
-        // layer.setMap(map);
         var provinsiLayer = {
           query: {
             select: 'kml_4326',
@@ -240,17 +158,25 @@
         var layer = new google.maps.FusionTablesLayer(provinsiLayer);
         layer.setMap(map);
 
+        // Create the DIV to hold the control and call the CenterControl()
+        // constructor passing in this DIV.
+
+        ZoomControl(map, 'Provinsi')
         google.maps.event.addListener(map, 'zoom_changed', function() {
           var zoomLevel = map.getZoom();
           console.log(zoomLevel);
           if (zoomLevel >= zoomMinKabupaten && zoomLevel < zoomMinKecamatan) {
-            console.log("KABUPATEN");
+            // console.log("KABUPATEN");
             layer.setOptions(kabupatenLayer);
+            ZoomControl(map, 'Kabupaten')
           }else if (zoomLevel >= zoomMinKecamatan) {
-            console.log("KECAMATAN");
+            // console.log("KECAMATAN");
             layer.setOptions(kecamatanLayer);
+            ZoomControl(map, 'Kecamatan')
           }else{
+            // console.log('PROVINSI');
             layer.setOptions(provinsiLayer);
+            ZoomControl(map, 'Provinsi')
           }
         })
       }
