@@ -73,8 +73,8 @@
       var lat = 0.7893;
       var lng = 113.9213;
       var zoomMinProvinsi = 5;
-      var zoomMinKabupaten = 7;
-      var zoomMinKecamatan = 10;
+      var zoomMinKabupaten = 8;
+      var zoomMinKecamatan = 11;
       var CountryName = "Indonesia";
       var maptype = google.maps.MapTypeId.ROADMAP;
       if (!isNaN(lat) && !isNaN(lng)) {
@@ -202,8 +202,10 @@
           },
           styles: [{
             polygonOptions: {
-              fillColor: "#FF0000",
-              fillOpacity: 0.1
+              fillColor: "#008000",
+              fillOpacity: 0.1,
+              strokeColor: "#008000",
+              strokeOpacity: 0.8
             }
           }]
         }
@@ -215,7 +217,9 @@
           styles: [{
             polygonOptions: {
               fillColor: "#FFFF00",
-              fillOpacity: 0.1
+              fillOpacity: 0.1,
+              strokeColor: "#FFFF00",
+              strokeOpacity: 0.8
             }
           }]
         }
@@ -226,8 +230,10 @@
           },
           styles: [{
             polygonOptions: {
-              fillColor: "#FFFFFF",
-              fillOpacity: 0.1
+              fillColor: "#FF0000",
+              fillOpacity: 0.1,
+              strokeColor: "#FF0000",
+              strokeOpacity: 0.8
             }
           }]
         }
