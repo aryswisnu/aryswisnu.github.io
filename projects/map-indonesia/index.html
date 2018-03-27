@@ -49,6 +49,16 @@
        padding-left: 5px;
        padding-right: 5px;
       }
+      #wait{
+        width:69px;
+        height:89px;
+        position:absolute;
+        top:50%;
+        left:50%;
+        padding:2px;
+        font-family: Roboto,Arial,sans-serif;
+        z-index: 10;
+      }
     </style>
   </head>
   <body>
@@ -58,6 +68,11 @@
           Menampilkan <span id="current_map_text">Provinsi</span> | Klik untuk melihat: <span id="next_map_text">Kabupaten</span>
         </div>
       </button>
+    </div>
+    <div id="wait" style="display: block">
+      <img src='Eclipse-1s-200px.gif' width="64" height="64" />
+      <br>
+      <span id="loading_msg">Loading...</span>
     </div>
     <div id="map"></div>
     <div id="info-box"></div>
@@ -70,6 +85,7 @@
       var zoomMinKabupaten = 8;
       var zoomMinKecamatan = 11;
       var zoomMinDesa = 13;
+      var loadedArr = [];
 
       let contentString = "";
 
@@ -100,7 +116,6 @@
           map.setCenter(indonesiaCenter);
         }
       }
-
       function initMap() {
         map = new google.maps.Map(document.getElementById('map'), {
           zoom: 4,
@@ -115,10 +130,22 @@
 
         var infoWindow = new google.maps.InfoWindow;
 
-        provinsi.loadGeoJson(provinsiLayer);
-        kabupaten.loadGeoJson(kabupatenLayer);
-        kecamatan.loadGeoJson(kecamatanLayer);
-        desa.loadGeoJson(desaLayer);
+        provinsi.loadGeoJson(provinsiLayer, null, function (features) {
+            loadedArr.push('provinsi');
+            checkLoad('provinsi');
+        });
+        kabupaten.loadGeoJson(kabupatenLayer, null, function (features) {
+            loadedArr.push('kabupaten');
+            checkLoad('kabupaten');
+        });
+        kecamatan.loadGeoJson(kecamatanLayer, null, function (features) {
+            loadedArr.push('kecamatan');
+            checkLoad('kecamatan');
+        });
+        desa.loadGeoJson(desaLayer, null, function (features) {
+            loadedArr.push('desa');
+            checkLoad('desa');
+        });
 
         provinsi.setStyle(function(feature) {
           var color = '#008000';
@@ -253,7 +280,8 @@
           infoWindow.close();
         });
 
-        provinsi.setMap(map)
+        provinsi.setMap(map);
+        checkLoad('provinsi')
 
         google.maps.event.addListener(map, 'zoom_changed', function() {
           var zoomLevel = map.getZoom();
@@ -262,6 +290,7 @@
             //console.log("KABUPATEN");
             // provinsi.loadGeoJson('http://localhost/aryswisnu.github.io/projects/map-indonesia/KABUKOTA_ADMINISTRATIVE_AREA-SIMPLIFIED.geojson');
             zoomControlText('Kabupaten', 'Kecamatan')
+            checkLoad('kabupaten')
             infoWindow.close();
             provinsi.setMap(null);
             kecamatan.setMap(null);
@@ -272,6 +301,7 @@
             //console.log("KECAMATAN");
             // provinsi.loadGeoJson('http://localhost/aryswisnu.github.io/projects/map-indonesia/KECAMATAN_ADMINISTRATIVE_AREA-SIMPLIFIED.geojson');
             zoomControlText('Kecamatan', 'Desa')
+            checkLoad('kecamatan')
             infoWindow.close();
             provinsi.setMap(null);
             kabupaten.setMap(null);
@@ -282,6 +312,7 @@
             //console.log('DESA');
             // provinsi.loadGeoJson('http://localhost/aryswisnu.github.io/projects/map-indonesia/PROVINSI_ADMINISTRATIVE_AREA-SIMPLIFIED.geojson');
             zoomControlText('Desa', 'Provinsi')
+            checkLoad('desa')
             infoWindow.close();
             kecamatan.setMap(null);
             provinsi.setMap(null);
@@ -291,6 +322,7 @@
             //console.log('PROVINSI');
             // provinsi.loadGeoJson('http://localhost/aryswisnu.github.io/projects/map-indonesia/PROVINSI_ADMINISTRATIVE_AREA-SIMPLIFIED.geojson');
             zoomControlText('Provinsi', 'Kabupaten')
+            checkLoad('provinsi')
             infoWindow.close();
             kabupaten.setMap(null);
             kecamatan.setMap(null);
@@ -332,6 +364,18 @@
         // areaState.setMap(map)
         // areaState.setMap(map)
       }
+
+      function checkLoad(layer){
+        //console.log(layer);
+        if(loadedArr.indexOf(layer) > -1){
+          //console.log('callse');
+          $("#wait").css("display", "none");
+        }else{
+          //console.log('notcalled');
+          $("#wait").css("display", "block");
+        }
+      }
+
     </script>
     <script async defer
     src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC9h9icjUbLnV4txic-Zjli2n9zFFrrZbQ&callback=initMap">
