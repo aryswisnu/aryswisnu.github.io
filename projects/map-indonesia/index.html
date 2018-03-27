@@ -265,6 +265,7 @@
             infoWindow.close();
             provinsi.setMap(null);
             kecamatan.setMap(null);
+            desa.setMap(null);
             kabupaten.setMap(map);
             infoWindow.close();
           }else if (zoomLevel >= zoomMinKecamatan && zoomLevel < zoomMinDesa) {
@@ -272,6 +273,7 @@
             // provinsi.loadGeoJson('http://localhost/aryswisnu.github.io/projects/map-indonesia/KECAMATAN_ADMINISTRATIVE_AREA-SIMPLIFIED.geojson');
             zoomControlText('Kecamatan', 'Desa')
             infoWindow.close();
+            provinsi.setMap(null);
             kabupaten.setMap(null);
             desa.setMap(null);
             kecamatan.setMap(map);
@@ -292,6 +294,7 @@
             infoWindow.close();
             kabupaten.setMap(null);
             kecamatan.setMap(null);
+            desa.setMap(null);
             provinsi.setMap(map);
           }
         })
