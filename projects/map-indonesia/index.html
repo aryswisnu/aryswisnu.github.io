@@ -1,21 +1,31 @@
+<!DOCTYPE html>
 <html>
   <head>
+    <title>Relawan (Cirebon)</title>
+    <meta name="viewport" content="initial-scale=1.0">
+    <meta charset="utf-8">
     <style>
-      html,
-      body {
-      width: 100%;
-      height: 100%;
-      margin: 0;
-      padding: 0;
+      /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+      #map {
+        width: 100%;
+        height: 100%;
+        margin-top: -65px
       }
-      #map_canvas {
-      width: 100%;
-      height: 100%;
-      margin-top: -65px
+      /* Optional: Makes the sample page fill the window. */
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
       }
-      .infowindow * {
-      font-size: 90%;
-      margin: 0
+      #info-box {
+        background-color: white;
+        border: 1px solid black;
+        bottom: 30px;
+        height: 20px;
+        padding: 10px;
+        position: absolute;
+        left: 30px;
       }
       #button_container{
         position: relative;
@@ -30,6 +40,7 @@
         margin-bottom: 22px;
         text-align: center;
       }
+      #button_container:focus {outline:0;}
       #button_text_container{
        color: rgb(25,25,25);
        font-family: Roboto,Arial,sans-serif;
@@ -39,56 +50,33 @@
        padding-right: 5px;
       }
     </style>
-
-    <script src="https://cdn.rawgit.com/aryswisnu/aryswisnu.github.io/master/projects/map-indonesia/geoxml3_kmlStr.js"></script>
-    <script src="https://www.google.com/jsapi"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC9h9icjUbLnV4txic-Zjli2n9zFFrrZbQ"></script>
   </head>
   <body>
-    <table style="width:100%; height:100%;">
-      <tr style="width:100%; height:100%;">
-        <td style="width:100%; height:100%;">
-          <button id="button_container" onClick="zoomControlClick()">
-            <div id="button_text_container">
-              Menampilkan <span id="current_map_text">Provinsi</span> | Klik untuk melihat: <span id="next_map_text">Kabupaten</span>
-            </div>
-          </button>
-          <div id="map_canvas">
-          </div>
-        </td>
-      </tr>
-    </table>
+    <div>
+      <button id="button_container" onClick="zoomControlClick()">
+        <div id="button_text_container">
+          Menampilkan <span id="current_map_text">Provinsi</span> | Klik untuk melihat: <span id="next_map_text">Kabupaten</span>
+        </div>
+      </button>
+    </div>
+    <div id="map"></div>
+    <div id="info-box"></div>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
     <script>
-      // globals
-      var map = null;
-      var infoWindow = null;
-      var geoXml = null;
-      var geoXmlDoc = null;
-      var myLatLng = null;
-      var myOptions = null;
-      var mapCenter = null;
-      var geocodeTheCountry = true;
-      var gpolygons = [];
-
-      // Fusion Table data ID
-      var FT_ProvinsiTableID = "19lLpgsKdJRHL2O4fNmJ406ri9JtpIIk8a-AchA";
-      var FT_KabupatenTableID = "1QDDRfgqcsi8_fYREIxt8VhHlWNaVIWGKz5644ONP";
-      var FT_KecamatanTableID = "1Zvh6bejgz1eI2pwp-S-dyYcoAhmqefHe2yuVMGoc";
-      var CountryName = "Indonesia";
-      google.load('visualization', '1', {'packages': ['corechart', 'table', 'geomap']});
-
-      var FTresponse = null;
-
-      var lat = 0.7893;
-      var lng = 113.9213;
+      var map;
+      var indonesiaCenter = {lat: 0.7893, lng: 113.9213};
+      var latLng = {lat: -6.7428613, lng: 108.5189335};
       var zoomMinProvinsi = 5;
-      var zoomMinKabupaten = 10;
-      var zoomMinKecamatan = 13;
-      var CountryName = "Indonesia";
-      var maptype = google.maps.MapTypeId.ROADMAP;
-      if (!isNaN(lat) && !isNaN(lng)) {
-        myLatLng = new google.maps.LatLng(lat, lng);
-      }
+      var zoomMinKabupaten = 8;
+      var zoomMinKecamatan = 11;
+      var zoomMinDesa = 13;
+
+      let contentString = "";
+
+      var provinsiLayer   = 'https://cdn.rawgit.com/aryswisnu/aryswisnu.github.io/master/projects/map-indonesia/PROVINSI_ADMINISTRATIVE_AREA-SIMPLIFIED.geojson';
+      var kabupatenLayer  = 'https://cdn.rawgit.com/aryswisnu/aryswisnu.github.io/master/projects/map-indonesia/KABUKOTA_ADMINISTRATIVE_AREA-SIMPLIFIED.geojson';
+      var kecamatanLayer  = 'https://cdn.rawgit.com/aryswisnu/aryswisnu.github.io/master/projects/map-indonesia/KECAMATAN_ADMINISTRATIVE_AREA-SIMPLIFIED.geojson';
+      var desaLayer       = 'https://cdn.rawgit.com/aryswisnu/aryswisnu.github.io/master/projects/map-indonesia/DESA_ADMINISTRATIVE_AREA-CIREBON.geojson';
 
       function zoomControlText(currentMapText, nextMapText) {
         document.getElementById("current_map_text").innerHTML = currentMapText;
@@ -100,93 +88,250 @@
         var buttontext = document.getElementById("next_map_text").innerHTML;
         if(buttontext == 'Kabupaten'){
           map.setZoom(zoomMinKabupaten);
-          map.setCenter({lat: -6.21462, lng: 106.84513})
+          map.setCenter(latLng);
         }else if (buttontext == 'Kecamatan') {
           map.setZoom(zoomMinKecamatan);
-          map.setCenter({lat: -6.21462, lng: 106.84513})
+          map.setCenter(latLng);
+        }else if (buttontext == 'Desa') {
+          map.setZoom(zoomMinDesa);
+          map.setCenter(latLng);
         }else{
-          map.setZoom(zoomMinProvinsi)
-          map.setCenter({lat: lat, lng: lng})
+          map.setZoom(zoomMinProvinsi);
+          map.setCenter(indonesiaCenter);
         }
       }
 
-      function initialize() {
-        myOptions = {
-          zoom: zoomMinProvinsi,
-          center: myLatLng,
-          mapTypeId: maptype
-        };
+      function initMap() {
+        map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 4,
+          center: latLng,
+          mapTypeId: google.maps.MapTypeId.ROADMAP
+        });
 
-        map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
-        var provinsiLayer = {
-          query: {
-            select: 'kml_4326',
-            from: FT_ProvinsiTableID,
-            where: "'name_0' = '" + CountryName + "';"
-          },
-          styles: [{
-            polygonOptions: {
-              fillColor: "#008000",
-              fillOpacity: 0.1,
-              strokeColor: "#008000",
-              strokeOpacity: 0.8
-            }
-          }]
-        }
-        var kabupatenLayer = {
-          query: {
-            select: 'geometry',
-            from: FT_KabupatenTableID
-          },
-          styles: [{
-            polygonOptions: {
-              fillColor: "#FFFF00",
-              fillOpacity: 0.1,
-              strokeColor: "#FFFF00",
-              strokeOpacity: 0.8
-            }
-          }]
-        }
-        var kecamatanLayer = {
-          query: {
-            select: 'geometry',
-            from: FT_KecamatanTableID
-          },
-          styles: [{
-            polygonOptions: {
-              fillColor: "#FF0000",
-              fillOpacity: 0.1,
-              strokeColor: "#FF0000",
-              strokeOpacity: 0.8
-            }
-          }]
-        }
-        var layer = new google.maps.FusionTablesLayer(provinsiLayer);
-        layer.setMap(map);
+        var provinsi = new google.maps.Data();
+        var kabupaten = new google.maps.Data();
+        var kecamatan = new google.maps.Data();
+        var desa = new google.maps.Data();
 
-        // Create the DIV to hold the control and call the CenterControl()
-        // constructor passing in this DIV.
+        var infoWindow = new google.maps.InfoWindow;
 
-        zoomControlText('Provinsi', 'Kabupaten')
+        provinsi.loadGeoJson(provinsiLayer);
+        kabupaten.loadGeoJson(kabupatenLayer);
+        kecamatan.loadGeoJson(kecamatanLayer);
+        desa.loadGeoJson(desaLayer);
+
+        provinsi.setStyle(function(feature) {
+          var color = '#008000';
+          if (feature.getProperty('isColorful')) {
+            color = feature.getProperty('color');
+          }
+          return({
+            fillColor: color,
+            fillOpacity: 0.1,
+            strokeColor: color,
+            strokeWeight: 0.8
+          });
+        });
+        kabupaten.setStyle(function(feature) {
+          var color = '#FFA500';
+          if (feature.getProperty('isColorful')) {
+            color = feature.getProperty('color');
+          }
+          return({
+            fillColor: color,
+            fillOpacity: 0.1,
+            strokeColor: color,
+            strokeWeight: 0.8
+          });
+        });
+        kecamatan.setStyle(function(feature) {
+          var color = '#FF0000';
+          if (feature.getProperty('isColorful')) {
+            color = feature.getProperty('color');
+          }
+          return({
+            fillColor: color,
+            fillOpacity: 0.1,
+            strokeColor: color,
+            strokeWeight: 0.8
+          });
+        });
+        desa.setStyle(function(feature) {
+          var color = '#008000';
+          if (feature.getProperty('isColorful')) {
+            color = feature.getProperty('color');
+          }
+          return({
+            fillColor: color,
+            fillOpacity: 0.1,
+            strokeColor: color,
+            strokeWeight: 0.8
+          });
+        });
+        // provinsi.addListener('mouseover', function(event) {
+        //   document.getElementById('info-box').textContent =
+        //       event.feature.getProperty('nm_keca');
+        // });
+
+        var toTitleCase = ((str) => {
+          return str.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
+        })
+
+        provinsi.addListener('click', function(event) {
+          contentString = '<b>Provinsi: </b>'+event.feature.getProperty('nm_provinsi');
+          infoWindow = new google.maps.InfoWindow({
+            position: event.latLng,
+            map: map,
+            content: contentString
+          });
+        });
+        kabupaten.addListener('click', function(event) {
+          contentString = '<p><b>Provinsi: </b>'+event.feature.getProperty('nm_provinsi')+'</p>'+
+          '<p><b>Kabupaten: </b>'+toTitleCase(event.feature.getProperty('nm_kabkota'))+'</p>';
+          infoWindow = new google.maps.InfoWindow({
+            position: event.latLng,
+            map: map,
+            content: contentString
+          });
+        });
+        kecamatan.addListener('click', function(event) {
+          contentString = '<p><b>Provinsi: </b>'+event.feature.getProperty('nm_provinsi')+'</p>'+
+          '<p><b>Kabupaten: </b>'+toTitleCase(event.feature.getProperty('nm_kabkota'))+'</p>'+
+          '<p><b>Kecamatan: </b>'+toTitleCase(event.feature.getProperty('nm_keca'))+'</p>';
+          infoWindow = new google.maps.InfoWindow({
+            position: event.latLng,
+            map: map,
+            content: contentString
+          });
+        });
+        desa.addListener('click', function(event) {
+          contentString = '<p><b>Provinsi: </b>'+event.feature.getProperty('PROPINSI')+'</p>'+
+          '<p><b>Kabupaten: </b>'+toTitleCase(event.feature.getProperty('KABUPATEN'))+'</p>'+
+          '<p><b>Kecamatan: </b>'+toTitleCase(event.feature.getProperty('KECAMATAN'))+'</p>'+
+          '<p><b>Desa: </b>'+toTitleCase(event.feature.getProperty('DESA'))+'</p>';
+          infoWindow = new google.maps.InfoWindow({
+            position: event.latLng,
+            map: map,
+            content: contentString
+          });
+        });
+
+        provinsi.addListener('mouseover', function(event) {
+          provinsi.revertStyle();
+          provinsi.overrideStyle(event.feature, {fillOpacity: 1, strokeWeight: 1});
+          document.getElementById('info-box').textContent = event.feature.getProperty('nm_provinsi');
+        });
+        provinsi.addListener('mouseout', function(event) {
+          provinsi.revertStyle();
+          infoWindow.close();
+        });
+        kabupaten.addListener('mouseover', function(event) {
+          kabupaten.revertStyle();
+          kabupaten.overrideStyle(event.feature, {fillOpacity: 1, strokeWeight: 1});
+          document.getElementById('info-box').textContent = event.feature.getProperty('nm_kabkota');
+        });
+        kabupaten.addListener('mouseout', function(event) {
+          kabupaten.revertStyle();
+          infoWindow.close();
+        });
+        kecamatan.addListener('mouseover', function(event) {
+          kecamatan.revertStyle();
+          kecamatan.overrideStyle(event.feature, {fillOpacity: 1, strokeWeight: 1});
+          document.getElementById('info-box').textContent = event.feature.getProperty('nm_keca');
+        });
+        kecamatan.addListener('mouseout', function(event) {
+          kecamatan.revertStyle();
+          infoWindow.close();
+        });
+        desa.addListener('mouseover', function(event) {
+          desa.revertStyle();
+          desa.overrideStyle(event.feature, {fillOpacity: 1, strokeWeight: 1});
+          document.getElementById('info-box').textContent = event.feature.getProperty('DESA');
+        });
+        desa.addListener('mouseout', function(event) {
+          desa.revertStyle();
+          infoWindow.close();
+        });
+
+        provinsi.setMap(map)
+
         google.maps.event.addListener(map, 'zoom_changed', function() {
           var zoomLevel = map.getZoom();
-          // console.log(zoomLevel);
+          //console.log(zoomLevel);
           if (zoomLevel >= zoomMinKabupaten && zoomLevel < zoomMinKecamatan) {
-            // console.log("KABUPATEN");
-            layer.setOptions(kabupatenLayer);
+            //console.log("KABUPATEN");
+            // provinsi.loadGeoJson('http://localhost/aryswisnu.github.io/projects/map-indonesia/KABUKOTA_ADMINISTRATIVE_AREA-SIMPLIFIED.geojson');
             zoomControlText('Kabupaten', 'Kecamatan')
-          }else if (zoomLevel >= zoomMinKecamatan) {
-            // console.log("KECAMATAN");
-            layer.setOptions(kecamatanLayer);
-            zoomControlText('Kecamatan', 'Provinsi')
+            infoWindow.close();
+            provinsi.setMap(null);
+            kecamatan.setMap(null);
+            kabupaten.setMap(map);
+            infoWindow.close();
+          }else if (zoomLevel >= zoomMinKecamatan && zoomLevel < zoomMinDesa) {
+            //console.log("KECAMATAN");
+            // provinsi.loadGeoJson('http://localhost/aryswisnu.github.io/projects/map-indonesia/KECAMATAN_ADMINISTRATIVE_AREA-SIMPLIFIED.geojson');
+            zoomControlText('Kecamatan', 'Desa')
+            infoWindow.close();
+            kabupaten.setMap(null);
+            desa.setMap(null);
+            kecamatan.setMap(map);
+            infoWindow.close();
+          }else if (zoomLevel >= zoomMinDesa){
+            //console.log('DESA');
+            // provinsi.loadGeoJson('http://localhost/aryswisnu.github.io/projects/map-indonesia/PROVINSI_ADMINISTRATIVE_AREA-SIMPLIFIED.geojson');
+            zoomControlText('Desa', 'Provinsi')
+            infoWindow.close();
+            kecamatan.setMap(null);
+            provinsi.setMap(null);
+            desa.setMap(map);
+            infoWindow.close();
           }else{
-            // console.log('PROVINSI');
-            layer.setOptions(provinsiLayer);
+            //console.log('PROVINSI');
+            // provinsi.loadGeoJson('http://localhost/aryswisnu.github.io/projects/map-indonesia/PROVINSI_ADMINISTRATIVE_AREA-SIMPLIFIED.geojson');
             zoomControlText('Provinsi', 'Kabupaten')
+            infoWindow.close();
+            kabupaten.setMap(null);
+            kecamatan.setMap(null);
+            provinsi.setMap(map);
           }
         })
+
+        // areaState.setStyle(function(feature) {
+        //   var color = '#008000';
+        //   if (feature.getProperty('isColorful')) {
+        //     color = feature.getProperty('color');
+        //   }
+        //   return({
+        //     fillColor: color,
+        //     strokeColor: color,
+        //     strokeWeight: 0.2
+        //   });
+        // });
+        //
+        // areaState.addListener('mouseover', function(event) {
+        //   areaState.revertStyle();
+        //   areaState.overrideStyle(event.feature, {strokeWeight: 1});
+        //   document.getElementById('info-box').textContent = event.feature.getProperty('nm_provinsi');
+        // });
+        // areaState.addListener('mouseout', function(event) {
+        //   areaState.revertStyle();
+        // });
+        //
+        // var infoWindow = new google.maps.InfoWindow;
+        // areaState.addListener('click', function(event) {
+        //   infoWindow = new google.maps.InfoWindow({
+        //     position: event.latLng,
+        //     map: map,
+        //     content: event.feature.getProperty('nm_provinsi')
+        //   });
+        // });
+        //
+        // areaState.setMap(map)
+        // areaState.setMap(map)
       }
-      google.maps.event.addDomListener(window, 'load', initialize);
+    </script>
+    <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC9h9icjUbLnV4txic-Zjli2n9zFFrrZbQ&callback=initMap">
     </script>
   </body>
 </html>
